@@ -1,7 +1,7 @@
 {
-	"name": "hexinspector",
-	"displayName": "HexInspector",
-	"description": "Provides fast and easy way to peek other forms of a hexadecimal/decimal/binary value",
+	"name": "ethconverter",
+	"displayName": "EthConverter",
+	"description": "Provides fast and easy way to peek other forms of an ether value",
 	"version": "1.5.1",
 	"publisher": "mateuszchudyk",
 	"license": "MIT",
@@ -28,7 +28,7 @@
 	"contributes": {
 		"configuration": {
 			"type": "object",
-			"title": "HexInspector",
+			"title": "EthConverter",
 			"properties": {
 				"hexinspector.inputDataTypes": {
 					"type": "array",
@@ -78,10 +78,13 @@
 		"test": "npm run compile && node ./node_modules/vscode/bin/test"
 	},
 	"devDependencies": {
-		"typescript": "^3.1.4",
-		"vscode": "^1.1.25",
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^18.19.54",
 		"tslint": "^5.8.0",
-		"@types/node": "^8.10.25",
-		"@types/mocha": "^2.2.42"
+		"typescript": "^5.6.2",
+		"vscode": "^1.1.25"
+	},
+	"dependencies": {
+		"undici": "^6.19.8"
 	}
 }

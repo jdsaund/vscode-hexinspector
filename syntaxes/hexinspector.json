@@ -1,43 +1,38 @@
 {
 	"scopeName": "source.hexinspector",
-	"fileTypes": [ "hexinspector" ],
+	"fileTypes": [
+		"hexinspector"
+	],
 	"patterns": [
-		{ "include": "#title" },
-		{ "include": "#input-value" },
-		{ "include": "#input-lenght" },
-		{ "include": "#output-form-label" },
-		{ "include": "#endiannes" }
+		{
+			"include": "#title"
+		},
+		{
+			"include": "#number"
+		},
+		{
+			"include": "#subheading"
+		},
+		{
+			"include": "#output-form-label"
+		}
 	],
 	"repository": {
-		"title" : {
-			"match": "HexInspector:",
+		"title": {
+			"match": "EthConverter:",
 			"name": "markup.heading.1.html"
 		},
-		"input-value": {
-			"patterns": [
-				{ "include": "#input-value-and-left-parenthesis" },
-				{ "include": "#input-value-right-parenthesis" }
-			]
-		},
-		"input-value-and-left-parenthesis": {
-			"match": ".*\\(",
+		"number": {
+			"match": "[0-9]+",
 			"name": "constant.numeric"
-		},
-		"input-value-right-parenthesis": {
-			"match": "\\)",
-			"name": "constant.numeric"
-		},
-		"input-length": {
-			"match": "[0-9]+B",
-			"name": "string.quoted"
 		},
 		"output-form-label": {
-			"match": "(Decimal|Size|Binary|Hexadecimal|Float16|Float32|Float64|Ascii|Bits set|:)",
-			"name": "keyword.other"
-		},
-		"endiannes": {
-			"match": "(Little Endian|Big Endian|[0-9]+B)",
+			"match": "(Usd|Ether|Gwei|Wei):",
 			"name": "string.quoted"
+		},
+		"subheading": {
+			"match": "(Ether|Gwei|Wei)[^:]",
+			"name": "keyword.other"
 		}
 	}
 }

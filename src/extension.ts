@@ -17,12 +17,12 @@ async function fetchEthPrice() {
         return price;
     } catch (error) {
         console.error('Error fetching ETH price:', error);
-        return 0;
+        return  null;
     }
 }
 
 // Create an object to hold the ethPrice
-const ethPriceHolder = { current: 0 };
+const ethPriceHolder = { current: null };
 
 // Fetch immediately
 fetchEthPrice().then(price => {
@@ -81,7 +81,7 @@ export function activate(context: ExtensionContext) {
 
             function bytesToDecimal(bytes: Uint8Array): BigNumber | undefined {
                 const decimalString = formsMap.decimal?.(bytes) ?? word;
-                const maybeNumber = new BigNumber(decimalString.replace(',', ''));
+                const maybeNumber = new BigNumber(decimalString);
                 if (!maybeNumber.isNaN()) {
                     return maybeNumber;
                 }
@@ -111,6 +111,9 @@ export function activate(context: ExtensionContext) {
                     }
 
                     const ether = maybeNumber.dividedBy(WAD);
+                    if (ethPriceHolder.current === null) {
+                        return 'network error';
+                    }
                     const dollars = ether.multipliedBy(new BigNumber(ethPriceHolder.current));
                     return '$' + formatValue(dollars, 2, true);
                 }
@@ -179,7 +182,9 @@ export function activate(context: ExtensionContext) {
                     formMaxLength = Math.max(formMaxLength, ...Object.keys(form).map(key => key.length));
                 }
 
-                let message = 'EthConverter: ' + word + '\n';
+                const parsed = formsMap.decimal?.(bytes) ?? word;
+
+                let message = 'EthConverter: ' + parsed.toString() + '\n';
 
                 // wei conversions
                 message += '\nWei\n';

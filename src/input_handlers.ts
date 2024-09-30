@@ -6,19 +6,18 @@ import * as utils from './utils';
 function createFormsMap(forms: string[]) {
     let availableFormsMap = {
         'binary'      : function(bytes: Uint8Array) {
-            return utils.addSeparatorToNumber(converters.toBinary(bytes), ' ', 8);
+            return converters.toBinary(bytes);
         },
         'ascii'       : converters.toAscii,
         'decimal'     : function(bytes: Uint8Array) {
-            let asUnsigned = utils.addSeparatorToNumber(converters.toDecimalUnsigned(bytes), ',', 3);
-            let asSigned = utils.addSeparatorToNumber(converters.toDecimalSigned(bytes),  ',', 3);
-            return asUnsigned + (asSigned != asUnsigned ? ' / ' + asSigned : '');
+            let asUnsigned = converters.toDecimalUnsigned(bytes);
+            return asUnsigned
         },
         'float16'     : converters.toFloat16,
         'float32'     : converters.toFloat32,
         'float64'     : converters.toFloat64,
         'hexadecimal' : function(bytes: Uint8Array) {
-            return utils.addSeparatorToNumber(converters.toHexadecimal(bytes), ' ', 2);
+            return converters.toHexadecimal(bytes);
         },
         'size'        : converters.toSize,
         'bits set'      : converters.toBitSet,

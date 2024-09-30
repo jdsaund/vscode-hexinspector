@@ -3,6 +3,10 @@
 import { ExtensionContext, languages, Hover, workspace } from 'vscode';
 import * as input_handlers from './input_handlers';
 import { fetch } from 'undici';
+import { BigNumber } from 'bignumber.js';
+
+const WAD = new BigNumber('1e18');
+const GWAD = new BigNumber('1e9');
 
 // this function will fetch the eth price in USD from coingecko
 async function fetchEthPrice() {
@@ -61,121 +65,110 @@ export function activate(context: ExtensionContext) {
                 formsMap = inputHandler.getFormsMap();
             }
 
-            function formatValue(value: number, decimals: number, allowTrailingZeros: boolean = false): string {
-                if (value === 0) return '0';
+            function formatValue(value: BigNumber, decimals: number, allowTrailingZeros: boolean = false): string {
+                if (value.isZero()) return '0';
+            
+                let result = value.toFixed(decimals, BigNumber.ROUND_DOWN);
                 
-                // Convert to string without exponential notation
-                let result = Math.abs(value).toLocaleString('fullwide', { useGrouping: false, maximumFractionDigits: 100 });
-                
-                // Ensure we have the correct number of decimal places
-                let [intPart, fracPart = ''] = result.split('.');
-                fracPart = fracPart.padEnd(decimals, '0').slice(0, decimals);
-                
-                result = intPart + (fracPart ? '.' + fracPart : '');
-                
-                // Remove trailing zeros after the decimal point
                 if (!allowTrailingZeros) {
-                    result = result.replace(/\.?0+$/, '');
+                    result = result.replace(/(\.\d*[1-9])0+$|\.0+$/, '$1');
                 }
                 
-                // Remove decimal point if it's the last character
                 result = result.replace(/\.$/, '');
-                
-                // Restore sign if negative
-                if (value < 0) result = '-' + result;
                 
                 return result;
             }
 
-            function bytesToDecimal(bytes: Uint8Array): number {
-                const maybeNumber = parseFloat((formsMap.decimal?.(bytes) ?? word).replace(',', ''));
-                if (!isNaN(maybeNumber)) {
+            function bytesToDecimal(bytes: Uint8Array): BigNumber | undefined {
+                const decimalString = formsMap.decimal?.(bytes) ?? word;
+                const maybeNumber = new BigNumber(decimalString.replace(',', ''));
+                if (!maybeNumber.isNaN()) {
                     return maybeNumber;
                 }
             }
 
             let weiFormsMap: input_handlers.MapFormToFunction = {
                 'gwei': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
-                    const gwei = maybeNumber / 1e9;
+                    const gwei = maybeNumber.dividedBy(GWAD);
                     return formatValue(gwei, 9);
                 },
                 'ether': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
-                    const ether = maybeNumber / 1e18;
+                    const ether = maybeNumber.dividedBy(WAD);
                     return formatValue(ether, 18);
                 },
                 'usd': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
 
-                    const ether = maybeNumber / 1e18;
-                    const dollars = ether * ethPriceHolder.current
+                    const ether = maybeNumber.dividedBy(WAD);
+                    const dollars = ether.multipliedBy(new BigNumber(ethPriceHolder.current));
                     return '$' + formatValue(dollars, 2, true);
                 }
             }
 
             let gweiFormsMap: input_handlers.MapFormToFunction = {
                 'wei': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
-                    const wei = Math.round(maybeNumber * 1e9);
-                    return formatValue(wei, 1);
+                    const wei = maybeNumber.multipliedBy(GWAD).integerValue(BigNumber.ROUND_DOWN);
+                    return formatValue(wei, 0);
                 },
                 'ether': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
-                    const ether = maybeNumber / 1e9;
+                    const ether = maybeNumber.dividedBy(GWAD);
                     return formatValue(ether, 18);
                 },
                 'usd': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
 
-                    const ether = maybeNumber / 1e9;
-                    const dollars = ether * ethPriceHolder.current
+                    const ether = maybeNumber.dividedBy(GWAD);
+                    const dollars = ether.multipliedBy(new BigNumber(ethPriceHolder.current));
                     return '$' + formatValue(dollars, 2, true);
                 }
             }
 
             let etherFormsMap: input_handlers.MapFormToFunction = {
                 'wei': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
-                    const wei = Math.round(maybeNumber * 1e18);
-                    return formatValue(wei, 1);
+                    const wei = maybeNumber.multipliedBy(WAD).integerValue(BigNumber.ROUND_DOWN);
+                    return formatValue(wei, 0);
                 },
                 'gwei': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
-                    const gwei = maybeNumber * 1e9;
+                    const gwei = maybeNumber.multipliedBy(GWAD);
                     return formatValue(gwei, 9);
                 },
                 'usd': (bytes: Uint8Array) => {
-                    const maybeNumber = bytesToDecimal(bytes)
+                    const maybeNumber = bytesToDecimal(bytes);
                     if (maybeNumber === undefined) {
                         return '';
                     }
 
-                    const dollars = maybeNumber * ethPriceHolder.current
+                    const dollars = maybeNumber.multipliedBy(new BigNumber(ethPriceHolder.current));
                     return '$' + formatValue(dollars, 2, true);
                 }
             }
@@ -214,8 +207,6 @@ export function activate(context: ExtensionContext) {
                     message += form.charAt(0).toUpperCase() + form.slice(1) + ':  ';
                     message += ' '.repeat(formMaxLength - form.length) + result + '\n';
                 }
-
-                // message = (formsMap.decimal?.(bytes) ?? word);
 
                 return new Hover({language: 'hexinspector', value: message});
             }
